@@ -11,14 +11,14 @@
 
 
 //Concatenates two different int values to form one larger int
-int concat(int p, int q) {
-	int hold = 1;
+double concat(double p, int q) {
+	double hold = 1;
 	while (hold <= q) hold *= 10;
 	return (p * hold + q);
 }
 
 //Returns digits past the decimal point for number concatenation
-double toDouble(int p, int q) {
+double toDouble(double p, int q) {
 	double hold = p;
 	double hold2 = q;
 	hold += (hold2 / 10);
@@ -36,16 +36,16 @@ int toInt(std::string::iterator f) {
 //Classes
 struct value {
 	virtual ~value() { }
-	virtual void parse(std::string::iterator &f, std::vector<std::unique_ptr<value>> &v, int &weight) { }
+	virtual void parse(std::string::iterator &f, std::vector<std::unique_ptr<value>> * v, int &weight) { }
 };
 
 struct Null : value {
 	Null() = default;
 
-	virtual void parse(std::string::iterator &f, std::vector<std::unique_ptr<value>> &v, int &weight) {
-		int hold = v.size() + 1;
-		v.resize(hold);
-		v[hold].reset(new Null());
+	virtual void parse(std::string::iterator &f, std::vector<std::unique_ptr<value>> * v, int &weight) {
+		int hold = v->size() + 1;
+		v->resize(hold);
+		v->at(hold).reset(new Null());
 		f + 4;
 		++weight;
 	}
@@ -57,19 +57,19 @@ struct Boolean : value {
 	Boolean() = default;
 	Boolean(const bool & b) : cond(b) { }
 
-	void parse(std::string::iterator &f, std::vector<std::unique_ptr<value>> &v, int &weight) {
+	void parse(std::string::iterator &f, std::vector<std::unique_ptr<value>> * v, int &weight) {
 		if (*f == 't') {
-			int hold = v.size() + 1;
-			v.resize(hold);
-			v[hold].reset(new Boolean(true));
+			int hold = v->size() + 1;
+			v->resize(hold);
+			v->at(hold).reset(new Boolean(true));
 			f + 4;
 			++weight;
 		}
 
 		else if (*f == 'f') {
-			int hold = v.size() + 1;
-			v.resize(hold);
-			v[hold].reset(new Boolean(false));
+			int hold = v->size() + 1;
+			v->resize(hold);
+			v->at(hold).reset(new Boolean(false));
 			f + 5;
 			++weight;
 		}
@@ -81,7 +81,7 @@ struct Num : value {
 
 	Num() = default;
 
-	virtual void parse(std::string::iterator &f, std::vector<std::unique_ptr<value>> &v, int &weight) {
+	virtual void parse(std::string::iterator &f, std::vector<std::unique_ptr<value>> * v, int &weight) {
 		int x;
 		Num y;
 		while (isdigit(*f)) {
@@ -99,9 +99,9 @@ struct Num : value {
 		}
 		Num * z = new Num();
 		z = &y;
-		int hold = v.size() + 1;
-		v.resize(hold);
-		v[hold].reset(z);
+		int hold = v->size() + 1;
+		v->resize(hold);
+		v->at(hold).reset(z);
 		++weight;
 		
 	}
@@ -110,7 +110,7 @@ struct Num : value {
 struct String : value, std::string {
 	using std::string::string;
 
-	virtual void parse(std::string::iterator &f, std::vector<std::unique_ptr<value>> &v, int &weight) {
+	virtual void parse(std::string::iterator &f, std::vector<std::unique_ptr<value>> * v, int &weight) {
 		String text;
 		while (*f != '\"') {
 			text += *f;
@@ -118,9 +118,9 @@ struct String : value, std::string {
 		}
 		String * x = new String();
 		x = &text;
-		int hold = v.size() + 1;
-		v.resize(hold);
-		v[hold].reset(x);
+		int hold = v->size() + 1;
+		v->resize(hold);
+		v->at(hold).reset(x);
 		++weight;
 	}
 };
@@ -133,7 +133,7 @@ struct Array : value, std::vector<value *> {
 
 	using std::vector<value *>::push_back;
 
-	virtual void parse(std::string::iterator &f, std::vector<std::unique_ptr<value>> &v, int &weight) {
+	virtual void parse(std::string::iterator &f, std::vector<std::unique_ptr<value>> * v, int &weight) {
 
 	}
 };
@@ -142,7 +142,7 @@ struct Object : value, std::map<std::string, value *> {
 	using std::map<std::string, value *>::map;
 	using std::map<std::string, value *>::insert;
 
-	virtual void parse(std::string::iterator &f, std::vector<std::unique_ptr<value>> &v, int &weight) {
+	virtual void parse(std::string::iterator &f, std::vector<std::unique_ptr<value>> * v, int &weight) {
 
 	}
 };
@@ -182,25 +182,31 @@ int main() {
 	std::string::iterator l = json.end();
 
 	while (f != l) {
+		std::cout << weight << '\n';
+		skip(f, l);
 
 		if (*f == 'n') {
 			Null hold;
-			hold.parse(f, v, weight);
+			hold.parse(f, &v, weight);
+			continue;
 		}
 
 		else if (*f == 't' || *f == 'f') {
 			Boolean hold;
-			hold.parse(f, v, weight);
+			hold.parse(f, &v, weight);
+			continue;
 		}
 
 		else if (*f == '"') {
 			String hold;
-			hold.parse(f, v, weight);
+			hold.parse(f, &v, weight);
+			continue;
 		}
 
 		else if (isdigit(*f)) {
 			Num hold;
-			hold.parse(f, v, weight);
+			hold.parse(f, &v, weight);
+			continue;
 		}
 
 		else if (*f == '[') {
