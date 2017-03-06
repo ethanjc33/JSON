@@ -41,6 +41,9 @@ struct value {
 					   std::vector<std::unique_ptr<value>> * v, int &weight) { }
 };
 
+void massParse(std::string::iterator & f, std::string::iterator l,
+			   std::vector<std::unique_ptr<value>> * v, int &weight);
+
 struct Null : value {
 	Null() = default;
 
@@ -108,7 +111,7 @@ struct Num : value {
 		v->resize(hold);
 		v->at(hold).reset(z);
 		++weight;
-		
+
 	}
 };
 
@@ -188,7 +191,7 @@ void skip(std::string::iterator & f, std::string::iterator l) {
 
 void massParse(std::string::iterator & f, std::string::iterator l,
 			   std::vector<std::unique_ptr<value>> * v, int &weight) {
-	
+
 	skip(f, l);
 
 	if (*f == 'n') {
@@ -242,8 +245,10 @@ int main() {
 	std::cin >> name;
 	std::ifstream file(name);
 
-	//String constructor takes two iterators, these iterators will read from beginning to end of file
-	std::string json{ std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>() };
+	//String constructor takes two iterators
+	//These iterators will read from beginning to end of file
+	std::string json{ std::istreambuf_iterator<char>(file),
+										std::istreambuf_iterator<char>() };
 
 	//Iterators for parsing through the entire JSON string
 	std::string::iterator f = json.begin();
@@ -255,7 +260,8 @@ int main() {
 	//Displays the JSON object's weight
 	std::cout << "\nParsing Completed...\nWeight: " << weight << '\n';
 
-	//TODO: Print out contents of vector - will sequentially read elements and print according to types
+	//TODO: Print out contents of vector
+	//Will sequentially read elements and print according to types
 
 	return 0;
 }
